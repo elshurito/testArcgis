@@ -62,12 +62,37 @@
 
             var columns = [{
                 label: "",  //wasn't able to inject an HTML <div> with image here
-                field: "ObjectID",
-                formatter: makeZoomButton
-            }, {
-                label: "Арендатор",
-                field: "bars_import.ARENDATOR"
-            }, {
+                field: "ObjectID"
+                //formatter: makeZoomButton
+            },
+                {
+                label: "OBJECTID",
+                field: "_Кадастровые_земельные_участки.OBJECTID"
+            },
+                {
+                    label: "Shape",
+                    field: "_Кадастровые_земельные_участки.Shape"
+                },
+                {
+                    label: "КН",
+                    field: "_Кадастровые_земельные_участки.КН"
+                },
+                {
+                    label: "Статус",
+                    field: "_Кадастровые_земельные_участки.Статус"
+                },
+                {
+                    label: "Area",
+                    field: "_Кадастровые_земельные_участки.Area"
+                },
+                {
+                    label: "Категория",
+                    field: "_Кадастровые_земельные_участки.Категория"
+                },
+                {
+                    label: "Назначение",
+                    field: "_Кадастровые_земельные_участки.Назначение"
+                },{
                 label: "Номер Рег",
                 field: "bars_import.NOMER_REG"
             }];
@@ -86,16 +111,16 @@
                 columns: columns
             }, "grid");
 
-            map = new Map("map", {
+            /*map = new Map("map", {
                 basemap: "gray",
                 center: [43.78, 53.54],
                 zoom: 10
-            });
+            });*/
 
             //add the states demographic data
             var statesLayer = new FeatureLayer("http://arcgis.lotsman.net:6080/arcgis/rest/services/maps/scr01/MapServer/0", {
                 mode: FeatureLayer.MODE_SELECTION,
-                outFields: ["bars_import.OBJECTID", "bars_import.ARENDATOR", "bars_import.NOMER_REG"]
+                outFields: ["*"]
             });
 
             //define a selection symbol
@@ -118,25 +143,25 @@
                     window.grid.set("store", memStore);
                     window.grid.set("sort", "bars_import.ARENDATOR");
 
-                    grid.on(".field-ObjectID:click", function(e) {
+                    /*grid.on(".field-ObjectID:click", function(e) {
                         //retrieve the ObjectId when someone clicks on the magnifying glass
                         if (e.target.alt) {
                             zoomRow(e.target.alt);
                         }
-                    });
+                    });*/
                 });
             });
 
             map.addLayers([statesLayer]);
 
-            function makeZoomButton(id) {
+          /*  function makeZoomButton(id) {
                 //set the feature 'id' as the alt value for the image so that it can be used to query below
                 var zBtn = "<div data-dojo-type='dijit/form/Button'><img src='images/zoom.png' alt='" + id + "'";
                 zBtn = zBtn + " width='18' height='18'></div>";
                 return zBtn;
-            }
+            }*/
 
-            function zoomRow(id) {
+           /* function zoomRow(id) {
                 statesLayer.clearSelection();
                 var query = new Query();
                 query.objectIds = [id];
@@ -145,16 +170,16 @@
                     var stateExtent = features[0].geometry.getExtent().expand(5.0);
                     map.setExtent(stateExtent);
                 });
-            }
+            }*/
 
         });
     </script>
+
 </head>
 <body class="claro">
 <div id="mainWindow" data-dojo-type="dijit/layout/BorderContainer" data-dojo-props="design:'headline'" style="width:100%; height:100%;">
-    <div id="map" data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'center'" >
-    </div>
-    <div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'left'" style="width:275px">
+
+    <div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'right'" style="width:100%">
         <div id="grid"></div>
     </div>
 </div>
