@@ -1,0 +1,139 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>test</title>
+        <link rel="stylesheet" href="css/style.css"/>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <!--The viewport meta tag is used to improve the presentation and behavior of the samples
+          on iOS devices-->
+        <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+        <title>QueryTask with geometry, results as an InfoWindow</title>
+
+        <link rel="stylesheet" href="http://js.arcgis.com/3.9/js/dojo/dijit/themes/claro/claro.css">
+        <link rel="stylesheet" href="http://js.arcgis.com/3.9/js/esri/css/esri.css">
+
+        <script src="http://js.arcgis.com/3.9/"></script>
+        <script>
+            dojo.require("esri.map");
+            dojo.require("esri.tasks.query");
+
+            var map, queryTask, query;
+            var symbol, infoTemplate;
+            var featureSet;
+
+            function init() {
+                map = new esri.Map("mapDiv", {
+                    basemap: "satellite",
+                    center: [43.78, 53.54],
+                    //Убираем логотип esri и надписи в зависимости от типа карты
+                    logo: false,
+                    showAttribution: false,
+                    zoom: 10
+                });
+
+                //create and add new layer
+                //Map.IsLogoVisible=False;
+                var dynamicLayer = new esri.layers.ArcGISDynamicMapServiceLayer("http://arcgis.lotsman.net:6080/arcgis/rest/services/maps/scr01/MapServer");
+                map.addLayer(dynamicLayer);
+
+                //Listen for click event on the map, when the user clicks on the map call executeQueryTask function.
+                dojo.connect(map, "onClick", executeQueryTask);
+
+                //build query task
+                queryTask = new esri.tasks.QueryTask("http://arcgis.lotsman.net:6080/arcgis/rest/services/maps/scr01/MapServer/0");
+
+                //Can listen for onComplete event to process results or can use the callback option in the queryTask.execute method.
+                //dojo.connect(queryTask, "onComplete", showResults);
+
+                //build query filter
+                query = new esri.tasks.Query();
+                query.outSpatialReference = {"wkid": 102100};
+                query.returnGeometry = true;
+                query.outFields = ["*"];
+
+
+                //create the infoTemplate to be used in the infoWindow.
+                //All ${attributeName} will be substituted with the attribute value for current feature.
+                infoTemplate = new esri.InfoTemplate("${_Кадастровые_земельные_участки.КН}",
+                        "${*}"
+                );
+
+                symbol = new esri.symbol.SimpleFillSymbol(esri.symbol.SimpleFillSymbol.STYLE_SOLID, new esri.symbol.SimpleLineSymbol(esri.symbol.SimpleLineSymbol.STYLE_SOLID, new dojo.Color([255,0,0]), 2), new dojo.Color([255,255,0,0.5]));
+            }
+
+            function executeQueryTask(evt) {
+                //Если нужно изменить размер всплывающего окна
+                //map.infoWindow.resize(450,400);
+                map.infoWindow.hide();
+                map.graphics.clear();
+
+
+
+                //onClick event returns the evt point where the user clicked on the map.
+                //This is contains the mapPoint (esri.geometry.point) and the screenPoint (pixel xy where the user clicked).
+                //set query geometry = to evt.mapPoint Geometry
+                query.geometry = evt.mapPoint;
+
+                //Execute task and call showResults on completion
+                queryTask.execute(query, function(fset) {
+                    if (fset.features.length === 1) {
+                        showFeature(fset.features[0],evt);
+                    } else if (fset.features.length !== 0) {
+                        showFeatureSet(fset,evt);
+                    }
+                });
+            }
+
+            function showFeature(feature,evt) {
+                map.graphics.clear();
+                feature.setSymbol(symbol);
+                feature.setInfoTemplate(infoTemplate);
+                map.graphics.add(feature);
+            }
+
+            function showFeatureSet(fset,evt) {
+                //remove all graphics on the maps graphics layer
+                map.graphics.clear();
+                featureSet = fset;
+                var numFeatures = featureSet.features.length;
+                //QueryTask returns a featureSet.  Loop through features in the featureSet and add them to the infowindow.
+                var content = "";
+                for (var i=0; i<numFeatures; i++) {
+                    var graphic = featureSet.features[i];
+                    content = content + graphic.attributes.FIELD_NAME + " Field (<A href='#' onclick='showFeature(featureSet.features[" + i + "]);'>show</A>)<br/>";
+                }
+
+
+
+
+                map.infoWindow.setContent(content);
+                map.infoWindow.show(evt.screenPoint);
+
+
+            }
+
+            function buttonChBox(){
+                alert(featureSet.features[3]);
+            }
+
+            dojo.ready(init);
+
+        </script>
+    </head>
+    <body>
+        <div class="inl" style="float:left;">
+            <form>
+                <input type="checkbox" id="ch1"/> <label for="ch1">Немного текста</label><br/>
+                <input type="checkbox" id="ch2"/> <label for="ch2">Немного текста</label><br/>
+                <input type="checkbox" id="ch3"/> <label for="ch3">Немного текста</label><br/>
+                <input type="checkbox" id="ch4"/> <label for="ch4">Немного текста</label><br/>
+                <input type="checkbox" id="ch5"/> <label for="ch5">Немного текста</label><br/>
+                <input type="button" value="Применить" onclick="buttonChBox();"/>
+
+            </form>
+        </div>
+
+            <div id="mapDiv" style="width:1200px; height:900px; border:1px solid #000; float: right;"></div>
+    </body>
+    </html>
