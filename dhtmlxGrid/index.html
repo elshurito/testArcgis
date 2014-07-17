@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>dhtmlxGrid</title>
+        <link rel="stylesheet" href="codebase/dhtmlxgrid.css" type="text/css"/>
+        <script src="codebase/dhtmlxgrid.js"></script>
+    </head>
+    <body>
+        <div class="gridbox" style="width: 300px;height: 400px;"></div>
+        <script>
+            mygrid = new dhtmlXGridObject('gridbox');
+            mygrid.setImagePath("codebase/imgs/");
+            mygrid.setHeader("Sales, book title, Author, Price");
+            mygrid.setInitWidths("100, 250, 150, 100");
+            mygrid.setColAlign("right, left, left, left");
+            mygrid.setColTypes("ro,ed,ed,ed");
+            mygrid.setColSorting("int,str,str,int");
+            mygrid.init();
+        </script>
+    </body>
+    </html>

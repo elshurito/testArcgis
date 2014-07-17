@@ -14,7 +14,7 @@
             padding:0;
             height:100%;
             width:100%;
-            font: 16px Geneva, Arial, Helvetica, sans-serif;
+            font: 12px Geneva, Arial, Helvetica, sans-serif;
         }
         #map{
             padding:0;
@@ -25,7 +25,11 @@
             width: 35px;
         }
         .dgrid-row-odd {
-            background: #FFFDF3;
+            font: 10px;;
+
+        }
+        th[role="columnheader"]{
+            background: green;
         }
         td div img:hover {
             cursor: pointer;
@@ -124,7 +128,7 @@
             });
 
             //define a selection symbol
-            var highlightSymbol = new SimpleFillSymbol().setColor(new Color([50, 205, 50, 0.25]));
+            var highlightSymbol = new SimpleFillSymbol().setColor(new Color([255, 255, 255, 0.1]));
             statesLayer.setSelectionSymbol(highlightSymbol);
 
             statesLayer.on("load", function(evt) {
