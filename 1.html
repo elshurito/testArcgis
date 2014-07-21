@@ -19,14 +19,33 @@
         var featureSet;
 
         function init() {
-            map = new esri.Map("mapDiv", {
-                basemap: "satellite",
-                center: [43.78, 53.54],
-                //Убираем логотип esri и надписи в зависимости от типа карты
-                logo: false,
-                showAttribution: false,
-                zoom: 10
+            require([
+                "esri/map", "esri/geometry/webMercatorUtils", "dojo/dom",
+                "dojo/domReady!"
+            ], function (Map, webMercatorUtils, dom) {
+                map = new esri.Map("mapDiv", {
+                    basemap: "satellite",
+                    center: [43.78, 53.54],
+                    //Убираем логотип esri и надписи в зависимости от типа карты
+                    logo: false,
+                    showAttribution: false,
+                    zoom: 10
+                });
+
+                map.on("load", function () {
+                    //after map loads, connect to listen to mouse move & drag events
+                    map.on("mouse-move", showCoordinates);
+                    map.on("mouse-drag", showCoordinates);
+                });
+
+                function showCoordinates(evt) {
+                    //the map is in web mercator but display coordinates in geographic (lat, long)
+                    var mp = webMercatorUtils.webMercatorToGeographic(evt.mapPoint);
+                    //display mouse coordinates
+                    dom.byId("info").innerHTML = mp.x.toFixed(4) + ", " + mp.y.toFixed(4);
+                }
             });
+
 
             //create and add new layer
             //Map.IsLogoVisible=False;
@@ -114,6 +133,8 @@
 </head>
 <body class="claro">
 Click on a Petroleum Field to get more info.  When field is highlighted, click field again to get infoWindow.
-<div id="mapDiv" style="width:800px; height:600px; border:1px solid #000;"></div>
+<div id="mapDiv" style="position:relative; width:900px; height:600px; border:1px solid #000;">
+    <span id="info" style="position:absolute; left:15px; bottom:5px; color:#000; z-index:50;"></span>
+</div>
 </body>
 </html>
