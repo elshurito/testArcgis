@@ -5,30 +5,42 @@
     <!--The viewport meta tag is used to improve the presentation and behavior of the samples 
       on iOS devices-->
     <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
-    <title>Update Fire Perimeter</title>
+    <title>Landuse</title>
 
     <link rel="stylesheet" href="http://js.arcgis.com/3.10/js/dojo/dijit/themes/claro/claro.css">
     <link rel="stylesheet" href="http://js.arcgis.com/3.10/js/esri/css/esri.css">
     <style>
-        html, body { height: 100%; width: 100%; margin: 0;}
-        #map, #header {
-            border: 1px solid #444;
-        }
-        #map {
+        html, body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
             padding: 0;
-            margin: 5px;
+            overflow:hidden;
         }
         #header {
-            height: 45px;
-            margin: 5px 5px 0 5px;
-            padding: 0.5em;
+            border:solid 2px #462d44;
+            background:#fff;
+            color:#444;
+            -moz-border-radius: 4px;
+            border-radius: 4px;
             font-family: sans-serif;
-            font-weight: 500;
-            color: #0f3b5f;
-            font-size: 1.1em;
+            font-size: 1.1em
+        padding-left:20px;
         }
-        .dj_ie .infowindow .window .top .right .user .content { position: relative; }
-        .dj_ie .simpleInfoWindow .content {position: relative;}
+        #map {
+            padding:1px;
+            border:solid 2px #444;
+            -moz-border-radius: 4px;
+            border-radius: 4px;
+        }
+        #rightPane {
+            border:none;
+            padding: 0;
+            width:228px;
+        }
+        .templatePicker {
+            border: solid 2px #444;
+        }
     </style>
 
     <script src="http://js.arcgis.com/3.10/"></script>
@@ -36,71 +48,161 @@
         var map;
         require([
             "esri/map",
+            "esri/toolbars/draw",
             "esri/toolbars/edit",
-            "esri/layers/FeatureLayer",
+            "esri/graphic",
             "esri/config",
 
+            "esri/layers/FeatureLayer",
+
+            "esri/symbols/SimpleMarkerSymbol",
+            "esri/symbols/SimpleLineSymbol",
+            "esri/symbols/SimpleFillSymbol",
+
+            "esri/dijit/editing/TemplatePicker",
+
+            "dojo/_base/array",
             "dojo/_base/event",
+            "dojo/_base/lang",
             "dojo/parser",
+            "dijit/registry",
 
             "dijit/layout/BorderContainer", "dijit/layout/ContentPane",
-            "dojo/domReady!"
+            "dijit/form/Button", "dojo/domReady!"
         ], function(
-                Map, Edit, FeatureLayer, esriConfig,
-                event, parser
+                Map, Draw, Edit, Graphic, esriConfig,
+                FeatureLayer,
+                SimpleMarkerSymbol, SimpleLineSymbol, SimpleFillSymbol,
+                TemplatePicker,
+                arrayUtils, event, lang, parser, registry
                 ) {
             parser.parse();
 
             // refer to "Using the Proxy Page" for more information:  https://developers.arcgis.com/en/javascript/jshelp/ags_proxy.html
             esriConfig.defaults.io.proxyUrl = "/proxy";
 
+            // This service is for development and testing purposes only. We recommend that you create your own geometry service for use within your applications.
+            esriConfig.defaults.geometryService = new esri.tasks.GeometryService("http://192.168.2.102:6080/arcgis/rest/services/Utilities/Geometry/GeometryServer");
+
             map = new Map("map", {
-                basemap: "topo",
-                center: [43.78, 53.54],
-                zoom: 10
+                basemap: "streets",
+                center: [-83.244, 42.581],
+                zoom: 15
             });
 
             map.on("layers-add-result", initEditing);
 
-            var firePerimeterFL = new FeatureLayer("http://arcgis.lotsman.net:6080/arcgis/rest/services/maps/scr01/MapServer/0", {
-                mode: FeatureLayer.MODE_ONDEMAND,
+            var landusePointLayer = new FeatureLayer("http://sampleserver6.arcgisonline.com/arcgis/rest/services/Military/FeatureServer/6", {
+                mode: FeatureLayer.MODE_SNAPSHOT,
+                outFields: ["*"]
+            });
+            var landuseLineLayer = new FeatureLayer("http://sampleserver6.arcgisonline.com/arcgis/rest/services/Military/FeatureServer/8", {
+                mode: FeatureLayer.MODE_SNAPSHOT,
+                outFields: ["*"]
+            });
+            var landusePolygonLayer = new FeatureLayer("http://sampleserver6.arcgisonline.com/arcgis/rest/services/Military/FeatureServer/9", {
+                mode: FeatureLayer.MODE_SNAPSHOT,
+                outFields: ["*"]
+            });
+            var firePerimeterFL = new FeatureLayer("http://192.168.2.102:6080/arcgis/rest/services/Test/NL_KADASTR/FeatureServer/1", {
+                mode: FeatureLayer.MODE_SNAPSHOT,
                 outFields: ["*"],
                 id: "firePerimeterFL"
             });
-            map.addLayers([firePerimeterFL]);
+
+
+            map.addLayers([landusePointLayer, landuseLineLayer, landusePolygonLayer,firePerimeterFL]);
+
+
+
 
             function initEditing(evt) {
-                var firePerimeterFL = map.getLayer("firePerimeterFL");
+                console.log("initEditing", evt);
+                // var map = this;
+                var currentLayer = null;
+                var layers = arrayUtils.map(evt.layers, function(result) {
+                    return result.layer;
+                });
+                console.log("layers", layers);
 
                 var editToolbar = new Edit(map);
                 editToolbar.on("deactivate", function(evt) {
-                    if ( evt.info.isModified ) {
-                        firePerimeterFL.applyEdits(null, [evt.graphic], null);
+                    currentLayer.applyEdits(null, [evt.graphic], null);
+                });
+
+                arrayUtils.forEach(layers, function(layer) {
+                    var editingEnabled = false;
+                    layer.on("dbl-click", function(evt) {
+                        event.stop(evt);
+                        if (editingEnabled === false) {
+                            editingEnabled = true;
+                            editToolbar.activate(Edit.EDIT_VERTICES , evt.graphic);
+                        } else {
+                            currentLayer = this;
+                            editToolbar.deactivate();
+                            editingEnabled = false;
+                        }
+                    });
+
+                    layer.on("click", function(evt) {
+                        event.stop(evt);
+                        if (evt.ctrlKey === true || evt.metaKey === true) {  //delete feature if ctrl key is depressed
+                            layer.applyEdits(null,null,[evt.graphic]);
+                            currentLayer = this;
+                            editToolbar.deactivate();
+                            editingEnabled=false;
+                        }
+                    });
+                });
+
+                var templatePicker = new TemplatePicker({
+                    featureLayers: layers,
+                    rows: "auto",
+                    columns: 2,
+                    grouping: true,
+                    style: "height: auto; overflow: auto;"
+                }, "templatePickerDiv");
+
+                templatePicker.startup();
+
+                var drawToolbar = new Draw(map);
+
+                var selectedTemplate;
+                templatePicker.on("selection-change", function() {
+                    if( templatePicker.getSelected() ) {
+                        selectedTemplate = templatePicker.getSelected();
+                    }
+                    switch (selectedTemplate.featureLayer.geometryType) {
+                        case "esriGeometryPoint":
+                            drawToolbar.activate(Draw.POINT);
+                            break;
+                        case "esriGeometryPolyline":
+                            drawToolbar.activate(Draw.POLYLINE);
+                            break;
+                        case "esriGeometryPolygon":
+                            drawToolbar.activate(Draw.POLYGON);
+                            break;
                     }
                 });
 
-                var editingEnabled = false;
-                firePerimeterFL.on("dbl-click", function(evt) {
-                    event.stop(evt);
-                    if (editingEnabled === false) {
-                        editingEnabled = true;
-                        editToolbar.activate(Edit.EDIT_VERTICES , evt.graphic);
-                    } else {
-                        editToolbar.deactivate();
-                        editingEnabled = false;
-                    }
+                drawToolbar.on("draw-end", function(evt) {
+                    drawToolbar.deactivate();
+                    editToolbar.deactivate();
+                    var newAttributes = lang.mixin({}, selectedTemplate.template.prototype.attributes);
+                    var newGraphic = new Graphic(evt.geometry, null, newAttributes);
+                    selectedTemplate.featureLayer.applyEdits([newGraphic], null, null);
                 });
             }
         });
     </script>
 </head>
 <body class="claro">
-<div data-dojo-type="dijit/layout/BorderContainer" data-dojo-props="design:'headline'" style="width:100%;height:100%;"  gutters="false">
-    <div id="header" data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'top'" >
-        <center> Zoom in to a fire perimeter and double click a feature to edit its vertices.  Double click again on the feature to stop editing and apply edits.</center>
+<div data-dojo-type="dijit/layout/BorderContainer" data-dojo-props="gutters:true, design:'headline'" style="width:100%;height:100%;">
+    <div data-dojo-type="dijit/layout/ContentPane"  id="header" data-dojo-props="region:'top'">Use ctrl or cmd + click on graphic to delete.  Double click on graphic to edit vertices. </div>
+    <div id="map" data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'center'"></div>
+    <div id="rightPane" data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'right'">
+        <div id="templatePickerDiv"></div>
     </div>
-    <div id="map" data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'center'"> </div>
 </div>
-
 </body>
 </html>
