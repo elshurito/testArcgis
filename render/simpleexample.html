@@ -39,18 +39,32 @@
                 var defaultSymbol = new SimpleFillSymbol().setStyle(SimpleFillSymbol.STYLE_NULL);
                 defaultSymbol.outline.setStyle(SimpleLineSymbol.STYLE_NULL);
 
-                //create renderer
+                /*//create renderer
                 var renderer = new UniqueValueRenderer(defaultSymbol, "тип_зу");
-
                 //add symbol for each possible value
                 renderer.addValue("Землепользование", new SimpleFillSymbol().setColor(new Color([255, 0, 0, 0.5])));
                 renderer.addValue("Многоконтурный земельный участок", new SimpleFillSymbol().setColor(new Color([0, 255, 0, 0.5])));
                 renderer.addValue("Обособленный участок", new SimpleFillSymbol().setColor(new Color([0, 0, 255, 0.5])));
-                renderer.addValue("Условный участок", new SimpleFillSymbol().setColor(new Color([255, 0, 255, 0.5])));
+                renderer.addValue("Условный участок", new SimpleFillSymbol().setColor(new Color([255, 0, 255, 0.5])));*/
 
+                /*var renderer = new UniqueValueRenderer(defaultSymbol, "статус");
+                //add symbol for each possible value
+                renderer.addValue("Аннулированный", new SimpleFillSymbol().setColor(new Color([255, 0, 0, 0.5])));
+                renderer.addValue("Архивный", new SimpleFillSymbol().setColor(new Color([0, 255, 0, 0.5])));
+                renderer.addValue("Временный", new SimpleFillSymbol().setColor(new Color([0, 0, 255, 0.5])));
+                renderer.addValue("Ранее учтенный", new SimpleFillSymbol().setColor(new Color([255, 0, 255, 0.5])));
+                renderer.addValue("Учтенный", new SimpleFillSymbol().setColor(new Color([255, 128, 255, 0.5])));*/
 
+                var renderer = new UniqueValueRenderer(defaultSymbol, "категория");
+                //add symbol for each possible value
+                renderer.addValue("Категория не установлена", new SimpleFillSymbol().setColor(new Color([68, 255, 0, 1])));
+                renderer.addValue("Земли водного фонда", new SimpleFillSymbol().setColor(new Color([255, 0, 0, 0.5])));
+                renderer.addValue("Земли лесного фонда", new SimpleFillSymbol().setColor(new Color([0, 0, 255, 0.5])));
+                renderer.addValue("Земли населенных пунктов", new SimpleFillSymbol().setColor(new Color([0, 0, 0, 0.5])));
+                renderer.addValue("Земли промышленности, энергетики, транспорта, связи, радиовещания, телевидения, информатики, земли для обеспечения космической деятельности, земли обороны, безопасности и земли иного специального назначения", new SimpleFillSymbol().setColor(new Color([255, 128, 255, 0.5])));
+                renderer.addValue("Земли сельскохозяйственного назначения", new SimpleFillSymbol().setColor(new Color([255, 255, 0, 0.5])));
 
-                var featureLayer = new FeatureLayer("http://192.168.2.102:6080/arcgis/rest/services/Test/NL_KADASTR/FeatureServer/10", {
+                var featureLayer = new FeatureLayer("http://192.168.2.102:6080/arcgis/rest/services/Test/NL_KADASTR/MapServer/10", {
                     infoTemplate: new InfoTemplate(" ", "${*}"),
                     mode: FeatureLayer.MODE_ONDEMAND,
                     outFields: ["*"]
